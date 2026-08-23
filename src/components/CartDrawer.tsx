@@ -25,6 +25,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
   const [checkoutStep, setCheckoutStep] = useState<'cart' | 'details' | 'success'>('cart');
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [activeWhatsappUrl, setActiveWhatsappUrl] = useState<string>('');
 
   const [customer, setCustomer] = useState<CustomerDetails>({
     fullName: '',
@@ -98,9 +99,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       notes: customer.notes
     };
 
-    // Disparar Webhook n8n (Alerta por email)
-    await sendN8nWebhook(payload);
-
     // Formatear mensaje profesional de WhatsApp
     const orderLines = items.map(
       i => `• *${i.perfume.name}* (${i.selectedMl}ml) x${i.quantity} -> ${formatPrice(i.perfume.price * i.quantity)}`
@@ -118,15 +116,20 @@ ${orderLines}
 ¿Me confirman disponibilidad y los datos bancarios / alias o link de pago para coordinar la entrega? ¡Muchas gracias!`;
 
     const encodedMessage = encodeURIComponent(rawMessage);
-    // Número oficial configurado: +54 9 11 2716-1063 -> 5491127161063
-    const rawPhone = import.meta.env.VITE_WHATSAPP_NUMBER || '5491127161063';
-    const cleanPhone = rawPhone.replace(/[^0-9]/g, '');
+    // WhatsApp oficial vendedor Argentina: 11 2716-1063 -> 5491127161063
+    const whatsappPhone = '5491127161063';
+    const waUrl = `https://wa.me/${whatsappPhone}?text=${encodedMessage}`;
 
-    // Abrir WhatsApp directamente
-    window.open(`https://wa.me/${cleanPhone}?text=${encodedMessage}`, '_blank');
+    setActiveWhatsappUrl(waUrl);
+
+    // Disparar Webhook en segundo plano sin bloquear el navegador
+    sendN8nWebhook(payload).catch(() => {});
 
     setIsProcessing(false);
     setCheckoutStep('success');
+
+    // Abrir WhatsApp directamente usando redirección directa
+    window.location.href = waUrl;
   };
 
   return (
@@ -155,17 +158,28 @@ ${orderLines}
 
           {/* SUCCESS STEP */}
           {checkoutStep === 'success' ? (
-            <div className="my-auto space-y-6 text-center py-8">
+            <div className="my-auto space-y-6 text-center py-6">
               <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center mx-auto shadow-emerald-glow">
                 <Check className="w-8 h-8" />
               </div>
 
               <div>
-                <h4 className="font-serif font-bold text-2xl text-slate-100">¡Pedido Enviado a WhatsApp!</h4>
+                <h4 className="font-serif font-bold text-2xl text-slate-100">¡Abrir WhatsApp para Confirmar!</h4>
                 <p className="text-sm text-slate-300 mt-2 font-light">
-                  Se ha abierto tu aplicación de <strong className="text-emerald-400">WhatsApp</strong> con el detalle de tu compra para coordinar el pago y envío de forma inmediata.
+                  Se ha generado tu mensaje de compra para enviar al vendedor al <strong className="text-emerald-400">+54 9 11 2716-1063</strong>.
                 </p>
               </div>
+
+              {/* DIRECT UNBLOCKABLE BUTTON */}
+              <a
+                href={activeWhatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-green-500 to-emerald-700 text-white font-extrabold text-sm hover:shadow-emerald-glow transition-all flex items-center justify-center gap-2 shadow-lg"
+              >
+                <Send className="w-5 h-5 text-white animate-bounce" />
+                <span>💬 Abrir mi WhatsApp Ahora para Enviar Pedido</span>
+              </a>
 
               <div className="p-4 rounded-2xl bg-dark-950 border border-gold-500/30 text-left text-xs space-y-1">
                 <p className="text-gold-400 font-bold flex items-center gap-1">
@@ -173,7 +187,7 @@ ${orderLines}
                 </p>
                 <p className="text-slate-300">• Cliente: {customer.fullName}</p>
                 <p className="text-slate-300">• Total a Pagar: {formatPrice(totalPrice)}</p>
-                <p className="text-slate-300">• WhatsApp Oficial: +54 9 11 2716-1063</p>
+                <p className="text-slate-300">• Destinatario: +54 9 11 2716-1063 (Vendedor LuxeOud)</p>
               </div>
 
               <button
@@ -182,7 +196,7 @@ ${orderLines}
                   setCheckoutStep('cart');
                   onClose();
                 }}
-                className="w-full py-3.5 rounded-2xl bg-gold-500 text-dark-950 font-bold text-sm hover:bg-gold-400 transition-colors shadow-gold-glow"
+                className="w-full py-3.5 rounded-2xl bg-dark-950 border border-slate-800 text-slate-300 font-bold text-xs hover:text-white transition-colors"
               >
                 Volver a la Tienda
               </button>
@@ -417,7 +431,7 @@ ${orderLines}
                   className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-green-500 to-emerald-700 text-white font-extrabold text-sm hover:shadow-emerald-glow transition-all flex items-center justify-center gap-2 shadow-lg"
                 >
                   {isProcessing ? (
-                    <span>Abriendo WhatsApp...</span>
+                    <span>Generando Pedido...</span>
                   ) : (
                     <>
                       <Send className="w-4 h-4" />
