@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { X, Trash2, ShoppingBag, ArrowRight, Check, Send, ShieldCheck, AlertCircle, MessageSquare } from 'lucide-react';
+import { X, Trash2, ShoppingBag, ArrowRight, Check, Send, ShieldCheck, AlertCircle, PhoneCall, Clock, CheckCircle2 } from 'lucide-react';
 import type { CartItem, CustomerDetails } from '../types';
 import { sendN8nWebhook } from '../lib/n8nWebhook';
+import { saveOrder } from '../lib/supabase';
 import { formatPrice } from '../utils/format';
 
 interface CartDrawerProps {
@@ -25,6 +26,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
   const [checkoutStep, setCheckoutStep] = useState<'cart' | 'details' | 'success'>('cart');
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [createdOrderId, setCreatedOrderId] = useState<string>('');
   const [activeWhatsappUrl, setActiveWhatsappUrl] = useState<string>('');
 
   const [customer, setCustomer] = useState<CustomerDetails>({
@@ -78,7 +80,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
     setIsProcessing(true);
 
-    const orderId = `WAP-${Math.floor(100000 + Math.random() * 900000)}`;
+    const orderId = `LUXE-${Math.floor(100000 + Math.random() * 900000)}`;
+    setCreatedOrderId(orderId);
 
     const payload = {
       eventType: 'new_order' as const,
@@ -99,12 +102,18 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       notes: customer.notes
     };
 
-    // Formatear mensaje profesional de WhatsApp
+    // 1. Guardar orden en la base de datos Supabase
+    await saveOrder(payload);
+
+    // 2. Disparar Webhook n8n para notificar al vendedor por email/plataforma
+    sendN8nWebhook(payload).catch(() => {});
+
+    // 3. Formatear mensaje para opción de notificar por WhatsApp al vendedor (+54 9 11 2716-1063)
     const orderLines = items.map(
       i => `• *${i.perfume.name}* (${i.selectedMl}ml) x${i.quantity} -> ${formatPrice(i.perfume.price * i.quantity)}`
     ).join('\n');
 
-    const rawMessage = `Hola *LuxeOud* 🕌✨! Quisiera realizar el siguiente pedido:
+    const rawMessage = `Hola *LuxeOud* 🕌✨! Realicé el pedido #${orderId} en la web:
 
 ${orderLines}
 
@@ -113,23 +122,14 @@ ${orderLines}
 📱 *Teléfono:* ${customer.phone}
 📍 *Ciudad y Dirección:* ${customer.city}, ${customer.address}
 
-¿Me confirman disponibilidad y los datos bancarios / alias o link de pago para coordinar la entrega? ¡Muchas gracias!`;
+Quedo a la espera de sus datos bancarios (CBU / Alias / Mercado Pago) para realizar el pago. ¡Gracias!`;
 
-    const encodedMessage = encodeURIComponent(rawMessage);
-    // WhatsApp oficial vendedor Argentina: 11 2716-1063 -> 5491127161063
     const whatsappPhone = '5491127161063';
-    const waUrl = `https://wa.me/${whatsappPhone}?text=${encodedMessage}`;
-
+    const waUrl = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(rawMessage)}`;
     setActiveWhatsappUrl(waUrl);
-
-    // Disparar Webhook en segundo plano sin bloquear el navegador
-    sendN8nWebhook(payload).catch(() => {});
 
     setIsProcessing(false);
     setCheckoutStep('success');
-
-    // Abrir WhatsApp directamente usando redirección directa
-    window.location.href = waUrl;
   };
 
   return (
@@ -160,34 +160,44 @@ ${orderLines}
           {checkoutStep === 'success' ? (
             <div className="my-auto space-y-6 text-center py-6">
               <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center mx-auto shadow-emerald-glow">
-                <Check className="w-8 h-8" />
+                <CheckCircle2 className="w-10 h-10" />
               </div>
 
-              <div>
-                <h4 className="font-serif font-bold text-2xl text-slate-100">¡Abrir WhatsApp para Confirmar!</h4>
-                <p className="text-sm text-slate-300 mt-2 font-light">
-                  Se ha generado tu mensaje de compra para enviar al vendedor al <strong className="text-emerald-400">+54 9 11 2716-1063</strong>.
+              <div className="space-y-2">
+                <span className="px-3 py-1 rounded-full bg-gold-500/10 text-gold-400 text-xs font-bold border border-gold-500/30">
+                  Orden #{createdOrderId}
+                </span>
+                <h4 className="font-serif font-bold text-2xl text-slate-100">¡Pedido Registrado con Éxito!</h4>
+                <p className="text-xs sm:text-sm text-slate-300 font-light leading-relaxed px-2">
+                  Hemos recibido tu solicitud de compra. <strong className="text-gold-300 font-semibold">El vendedor se pondrá en contacto contigo a la brevedad</strong> al número <strong className="text-emerald-400">{customer.phone}</strong> para proporcionarte los datos bancarios (CBU / Alias / Mercado Pago) y coordinar el envío de tu paquete.
                 </p>
               </div>
 
-              {/* DIRECT UNBLOCKABLE BUTTON */}
-              <a
-                href={activeWhatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-green-500 to-emerald-700 text-white font-extrabold text-sm hover:shadow-emerald-glow transition-all flex items-center justify-center gap-2 shadow-lg"
-              >
-                <Send className="w-5 h-5 text-white animate-bounce" />
-                <span>💬 Abrir mi WhatsApp Ahora para Enviar Pedido</span>
-              </a>
-
-              <div className="p-4 rounded-2xl bg-dark-950 border border-gold-500/30 text-left text-xs space-y-1">
-                <p className="text-gold-400 font-bold flex items-center gap-1">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" /> Resumen del Pedido:
+              {/* DETAILS CARD FOR SELLER & BUYER */}
+              <div className="p-4 rounded-2xl bg-dark-950 border border-gold-500/30 text-left text-xs space-y-2">
+                <p className="text-gold-400 font-bold flex items-center gap-1.5 border-b border-slate-800 pb-2">
+                  <ShieldCheck className="w-4 h-4 text-emerald-400" /> Resumen de la Solicitud:
                 </p>
-                <p className="text-slate-300">• Cliente: {customer.fullName}</p>
-                <p className="text-slate-300">• Total a Pagar: {formatPrice(totalPrice)}</p>
-                <p className="text-slate-300">• Destinatario: +54 9 11 2716-1063 (Vendedor LuxeOud)</p>
+                <p className="text-slate-300">• <strong>Comprador:</strong> {customer.fullName}</p>
+                <p className="text-slate-300">• <strong>WhatsApp:</strong> {customer.phone}</p>
+                <p className="text-slate-300">• <strong>Destino:</strong> {customer.city}, {customer.address}</p>
+                <p className="text-slate-300">• <strong>Monto Total a Transferir:</strong> <span className="text-gold-400 font-bold">{formatPrice(totalPrice)}</span></p>
+                <p className="text-slate-400 text-[11px] pt-1 flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5 text-gold-400" /> El vendedor te contactará pronto.
+                </p>
+              </div>
+
+              {/* OPTIONAL DIRECT WHATSAPP ACTION BUTTON */}
+              <div className="space-y-2 pt-2">
+                <a
+                  href={activeWhatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-green-500 to-emerald-700 text-white font-extrabold text-xs hover:shadow-emerald-glow transition-all flex items-center justify-center gap-2 shadow-lg"
+                >
+                  <Send className="w-4 h-4 text-white" />
+                  <span>Notificar al Vendedor por WhatsApp (+54 9 11 2716-1063)</span>
+                </a>
               </div>
 
               <button
@@ -196,7 +206,7 @@ ${orderLines}
                   setCheckoutStep('cart');
                   onClose();
                 }}
-                className="w-full py-3.5 rounded-2xl bg-dark-950 border border-slate-800 text-slate-300 font-bold text-xs hover:text-white transition-colors"
+                className="w-full py-3 rounded-2xl bg-dark-950 border border-slate-800 text-slate-400 font-medium text-xs hover:text-white transition-colors"
               >
                 Volver a la Tienda
               </button>
@@ -264,7 +274,7 @@ ${orderLines}
               {items.length > 0 && (
                 <div className="border-t border-slate-800 pt-4 space-y-4">
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-slate-400">Total a Abonar:</span>
+                    <span className="text-slate-400">Total del Pedido:</span>
                     <span className="font-serif font-extrabold text-2xl text-gold-400">
                       {formatPrice(totalPrice)}
                     </span>
@@ -275,26 +285,25 @@ ${orderLines}
                       setErrors({});
                       setCheckoutStep('details');
                     }}
-                    className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-green-500 to-emerald-700 text-white font-bold text-sm hover:shadow-emerald-glow hover:scale-[1.02] transition-all flex items-center justify-center gap-2 shadow-lg"
+                    className="w-full py-4 rounded-2xl bg-gradient-to-r from-gold-500 via-gold-400 to-gold-600 text-dark-950 font-bold text-sm hover:shadow-gold-glow hover:scale-[1.02] transition-all flex items-center justify-center gap-2 shadow-lg"
                   >
-                    <Send className="w-5 h-5 text-white" />
-                    <span>Comprar y Coordinar por WhatsApp</span>
+                    <span>Completar Datos y Realizar Pedido</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
 
                   <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
-                    <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Atención inmediata al +54 9 11 2716-1063</span>
+                    <PhoneCall className="w-3.5 h-3.5 text-gold-400" />
+                    <span>El vendedor te contactará para coordinar el pago por CBU / Alias</span>
                   </div>
                 </div>
               )}
             </>
           ) : (
-            /* DETAILS & WHATSAPP CHECKOUT STEP */
+            /* DETAILS & CUSTOMER CONTACT FORM */
             <form onSubmit={handleCheckout} noValidate className="flex-1 flex flex-col justify-between pt-4 space-y-4 overflow-y-auto">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-serif font-bold text-base text-slate-100">Datos para la Entrega</h4>
+                  <h4 className="font-serif font-bold text-base text-slate-100">Datos del Comprador</h4>
                   <button
                     type="button"
                     onClick={() => setCheckoutStep('cart')}
@@ -307,7 +316,7 @@ ${orderLines}
                 <div className="space-y-3 text-xs">
                   {/* Full Name */}
                   <div>
-                    <label className="block text-slate-300 font-medium mb-1">Nombre Completo *</label>
+                    <label className="block text-slate-300 font-medium mb-1">Nombre y Apellido Completo *</label>
                     <input
                       type="text"
                       placeholder="Ej: Sofía Benítez"
@@ -330,10 +339,10 @@ ${orderLines}
                   <div className="grid grid-cols-2 gap-2">
                     {/* Phone */}
                     <div>
-                      <label className="block text-slate-300 font-medium mb-1">WhatsApp / Tel *</label>
+                      <label className="block text-slate-300 font-medium mb-1">Teléfono / WhatsApp *</label>
                       <input
                         type="tel"
-                        placeholder="+549..."
+                        placeholder="Ej: +54 9 11..."
                         value={customer.phone}
                         onChange={(e) => {
                           setCustomer({ ...customer, phone: e.target.value });
@@ -352,7 +361,7 @@ ${orderLines}
 
                     {/* Email */}
                     <div>
-                      <label className="block text-slate-300 font-medium mb-1">Gmail / Email (Opcional)</label>
+                      <label className="block text-slate-300 font-medium mb-1">Email / Gmail (Opcional)</label>
                       <input
                         type="email"
                         placeholder="cliente@gmail.com"
@@ -409,15 +418,15 @@ ${orderLines}
                     </div>
                   </div>
 
-                  {/* WhatsApp Direct Banner */}
+                  {/* Seller Contact Info Banner */}
                   <div className="pt-2">
-                    <div className="p-3.5 rounded-xl bg-gradient-to-r from-emerald-950/80 via-dark-950 to-emerald-950/80 border border-emerald-500/40 flex items-center gap-3 text-emerald-200">
-                      <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                        <Send className="w-5 h-5" />
+                    <div className="p-3.5 rounded-xl bg-gradient-to-r from-gold-950/40 via-dark-950 to-gold-950/40 border border-gold-500/30 flex items-center gap-3 text-gold-200">
+                      <div className="p-2 rounded-lg bg-gold-500/20 text-gold-400 border border-gold-500/30">
+                        <PhoneCall className="w-5 h-5" />
                       </div>
                       <div>
-                        <span className="font-bold text-xs block text-slate-100">Atención Directa al +54 9 11 2716-1063</span>
-                        <span className="text-[10px] text-slate-300">Te enviamos nuestro CBU / Alias / Mercado Pago al instante para confirmar tu pedido.</span>
+                        <span className="font-bold text-xs block text-slate-100">Contacto Directo del Vendedor</span>
+                        <span className="text-[10px] text-slate-300">Te contactaremos para enviarte el CBU / Alias / Mercado Pago y coordinar el envío.</span>
                       </div>
                     </div>
                   </div>
@@ -428,21 +437,21 @@ ${orderLines}
                 <button
                   type="submit"
                   disabled={isProcessing}
-                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-green-500 to-emerald-700 text-white font-extrabold text-sm hover:shadow-emerald-glow transition-all flex items-center justify-center gap-2 shadow-lg"
+                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-gold-500 via-gold-400 to-gold-600 text-dark-950 font-extrabold text-sm hover:shadow-gold-glow transition-all flex items-center justify-center gap-2 shadow-lg"
                 >
                   {isProcessing ? (
-                    <span>Generando Pedido...</span>
+                    <span>Registrando Pedido...</span>
                   ) : (
                     <>
-                      <Send className="w-4 h-4" />
-                      <span>Enviar Pedido por WhatsApp ({formatPrice(totalPrice)})</span>
+                      <Check className="w-4 h-4" />
+                      <span>Confirmar Pedido ({formatPrice(totalPrice)})</span>
                     </>
                   )}
                 </button>
 
                 <div className="flex items-center justify-center gap-1 text-[10px] text-slate-400">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Contacto Directo e Inmediato con la Tienda</span>
+                  <span>El vendedor se contactará contigo para coordinar el pago</span>
                 </div>
               </div>
             </form>

@@ -26,7 +26,6 @@ export async function getPerfumes(): Promise<Perfume[]> {
       return PERFUMES_DATA;
     }
 
-    // Mapear respuesta de Supabase a interfaz Perfume
     return data.map((item: any) => ({
       id: item.id,
       name: item.name,
@@ -55,5 +54,40 @@ export async function getPerfumes(): Promise<Perfume[]> {
   } catch (err) {
     console.error('Error al conectar con Supabase:', err);
     return PERFUMES_DATA;
+  }
+}
+
+/**
+ * Guardar pedido de venta en la tabla 'orders' de Supabase
+ */
+export async function saveOrder(orderPayload: any): Promise<boolean> {
+  if (!supabase) {
+    console.log('[Order Storage] Supabase no configurado aún. Guardado en memoria local.');
+    return true;
+  }
+
+  try {
+    const { error } = await supabase.from('orders').insert([{
+      customer_name: orderPayload.customer.fullName,
+      customer_phone: orderPayload.customer.phone,
+      customer_email: orderPayload.customer.email || '',
+      city: orderPayload.customer.city,
+      address: orderPayload.customer.address,
+      payment_method: 'whatsapp_manual',
+      items: orderPayload.items,
+      total_price: orderPayload.totalPrice,
+      status: 'pending',
+      notes: orderPayload.notes || ''
+    }]);
+
+    if (error) {
+      console.error('Error al insertar orden en Supabase:', error);
+      return false;
+    }
+    console.log('Orden guardada exitosamente en Supabase');
+    return true;
+  } catch (err) {
+    console.error('Excepción al guardar orden:', err);
+    return false;
   }
 }
