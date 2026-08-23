@@ -115,7 +115,6 @@ export function App() {
         cartCount={totalCartCount}
         onOpenCart={() => setIsCartOpen(true)}
         onOpenSommelier={() => setIsSommelierOpen(true)}
-        onOpenN8nModal={() => setIsN8nModalOpen(true)}
         selectedCategory={selectedCategory}
         onSelectCategory={setSelectedCategory}
         searchQuery={searchQuery}
