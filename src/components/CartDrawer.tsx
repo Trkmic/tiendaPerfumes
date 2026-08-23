@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Trash2, ShoppingBag, ArrowRight, Check, CreditCard, ShieldCheck, AlertCircle, Lock, Wallet, Zap } from 'lucide-react';
+import { X, Trash2, ShoppingBag, ArrowRight, Check, Send, ShieldCheck, AlertCircle, MessageSquare } from 'lucide-react';
 import type { CartItem, CustomerDetails } from '../types';
 import { sendN8nWebhook } from '../lib/n8nWebhook';
 import { formatPrice } from '../utils/format';
@@ -32,7 +32,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     email: '',
     city: '',
     address: '',
-    paymentMethod: 'mercado_pago',
+    paymentMethod: 'whatsapp_direct',
     notes: '',
   });
 
@@ -51,13 +51,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       newErrors.phone = 'Por favor ingresa tu número de WhatsApp / teléfono.';
     } else if (customer.phone.trim().length < 6) {
       newErrors.phone = 'Ingresa un número telefónico válido (mínimo 6 dígitos).';
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!customer.email.trim()) {
-      newErrors.email = 'Por favor ingresa tu dirección de correo electrónico.';
-    } else if (!emailRegex.test(customer.email.trim())) {
-      newErrors.email = 'Ingresa un correo electrónico válido (ejemplo: nombre@gmail.com).';
     }
 
     if (!customer.city.trim()) {
@@ -84,14 +77,14 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
     setIsProcessing(true);
 
-    const orderId = `MP-${Math.floor(100000 + Math.random() * 900000)}`;
+    const orderId = `WAP-${Math.floor(100000 + Math.random() * 900000)}`;
 
     const payload = {
       eventType: 'new_order' as const,
       orderId,
       customer: {
         ...customer,
-        paymentMethod: 'mercado_pago' as const,
+        paymentMethod: 'whatsapp_direct' as const,
       },
       items: items.map(item => ({
         name: item.perfume.name,
@@ -105,22 +98,33 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       notes: customer.notes
     };
 
-    // Disparar Webhook n8n (Alerta de pedido)
+    // Disparar Webhook n8n (Alerta por email)
     await sendN8nWebhook(payload);
 
-    // Redirección directa a la cuenta de Mercado Pago del emprendedor
-    const mpCheckoutUrl = import.meta.env.VITE_MERCADOPAGO_CHECKOUT_URL || '';
+    // Formatear mensaje profesional de WhatsApp
+    const orderLines = items.map(
+      i => `• *${i.perfume.name}* (${i.selectedMl}ml) x${i.quantity} -> ${formatPrice(i.perfume.price * i.quantity)}`
+    ).join('\n');
 
-    if (mpCheckoutUrl) {
-      // Redirigir al link oficial de Mercado Pago del vendedor
-      window.location.href = mpCheckoutUrl;
-    } else {
-      // Si aún no ha configurado su link, simular cobro aprobado y mostrar confirmación
-      setTimeout(() => {
-        setIsProcessing(false);
-        setCheckoutStep('success');
-      }, 1500);
-    }
+    const rawMessage = `Hola *LuxeOud* 🕌✨! Quisiera realizar el siguiente pedido:
+
+${orderLines}
+
+💰 *Total a Abonar:* ${formatPrice(totalPrice)}
+👤 *Cliente:* ${customer.fullName}
+📱 *Teléfono:* ${customer.phone}
+📍 *Ciudad y Dirección:* ${customer.city}, ${customer.address}
+
+¿Me confirman disponibilidad y los datos bancarios / alias o link de pago para coordinar la entrega? ¡Muchas gracias!`;
+
+    const encodedMessage = encodeURIComponent(rawMessage);
+    const whatsappPhone = import.meta.env.VITE_WHATSAPP_NUMBER || '5491100000000';
+
+    // Abrir WhatsApp directamente
+    window.open(`https://wa.me/${whatsappPhone}?text=${encodedMessage}`, '_blank');
+
+    setIsProcessing(false);
+    setCheckoutStep('success');
   };
 
   return (
@@ -155,20 +159,19 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               </div>
 
               <div>
-                <h4 className="font-serif font-bold text-2xl text-slate-100">¡Pago Único Procesado!</h4>
+                <h4 className="font-serif font-bold text-2xl text-slate-100">¡Pedido Enviado a WhatsApp!</h4>
                 <p className="text-sm text-slate-300 mt-2 font-light">
-                  Transacción acreditada en la cuenta de <strong className="text-gold-400">Mercado Pago</strong>. El comprobante fue enviado a tu email.
+                  Se ha abierto tu aplicación de <strong className="text-emerald-400">WhatsApp</strong> con el detalle de tu compra para coordinar el pago y envío de forma inmediata.
                 </p>
               </div>
 
               <div className="p-4 rounded-2xl bg-dark-950 border border-gold-500/30 text-left text-xs space-y-1">
                 <p className="text-gold-400 font-bold flex items-center gap-1">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" /> Detalle del Pago Único:
+                  <ShieldCheck className="w-4 h-4 text-emerald-400" /> Resumen del Pedido:
                 </p>
                 <p className="text-slate-300">• Cliente: {customer.fullName}</p>
-                <p className="text-slate-300">• Email: {customer.email}</p>
-                <p className="text-slate-300">• Total Abonado (1 Pago): {formatPrice(totalPrice)}</p>
-                <p className="text-slate-300">• Destino: Cuenta Mercado Pago Oficial</p>
+                <p className="text-slate-300">• Total a Pagar: {formatPrice(totalPrice)}</p>
+                <p className="text-slate-300">• Canal: WhatsApp Directo Personalizado</p>
               </div>
 
               <button
@@ -245,7 +248,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               {items.length > 0 && (
                 <div className="border-t border-slate-800 pt-4 space-y-4">
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-slate-400">Total (Pago Único):</span>
+                    <span className="text-slate-400">Total a Abonar:</span>
                     <span className="font-serif font-extrabold text-2xl text-gold-400">
                       {formatPrice(totalPrice)}
                     </span>
@@ -256,30 +259,26 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       setErrors({});
                       setCheckoutStep('details');
                     }}
-                    className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 via-sky-500 to-blue-700 text-white font-bold text-sm hover:shadow-lg hover:scale-[1.02] transition-all flex items-center justify-center gap-2 shadow-md"
+                    className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-green-500 to-emerald-700 text-white font-bold text-sm hover:shadow-emerald-glow hover:scale-[1.02] transition-all flex items-center justify-center gap-2 shadow-lg"
                   >
-                    <CreditCard className="w-5 h-5 text-white" />
-                    <span>Pagar con Mercado Pago / Billeteras</span>
+                    <Send className="w-5 h-5 text-white" />
+                    <span>Comprar y Coordinar por WhatsApp</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
 
-                  <div className="p-2.5 rounded-xl bg-dark-950 border border-slate-800 text-[11px] text-slate-400 space-y-1">
-                    <div className="flex items-center gap-1.5 font-semibold text-sky-400">
-                      <Zap className="w-3.5 h-3.5" /> Pago único en 1 cuota
-                    </div>
-                    <p className="text-[10px] text-slate-400">
-                      Acepta Mercado Pago, Billeteras Virtuales (Ualá, Personal Pay, Cuenta DNI) y todas las Tarjetas de Crédito/Débito.
-                    </p>
+                  <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
+                    <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Te atendemos al instante por WhatsApp para coordinar pago y envío</span>
                   </div>
                 </div>
               )}
             </>
           ) : (
-            /* DETAILS & MERCADO PAGO CHECKOUT STEP */
+            /* DETAILS & WHATSAPP CHECKOUT STEP */
             <form onSubmit={handleCheckout} noValidate className="flex-1 flex flex-col justify-between pt-4 space-y-4 overflow-y-auto">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-serif font-bold text-base text-slate-100">Datos para Envío y Facturación</h4>
+                  <h4 className="font-serif font-bold text-base text-slate-100">Datos para la Entrega</h4>
                   <button
                     type="button"
                     onClick={() => setCheckoutStep('cart')}
@@ -337,24 +336,14 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
                     {/* Email */}
                     <div>
-                      <label className="block text-slate-300 font-medium mb-1">Gmail / Email *</label>
+                      <label className="block text-slate-300 font-medium mb-1">Gmail / Email (Opcional)</label>
                       <input
                         type="email"
                         placeholder="cliente@gmail.com"
                         value={customer.email}
-                        onChange={(e) => {
-                          setCustomer({ ...customer, email: e.target.value });
-                          if (errors.email) setErrors({ ...errors, email: '' });
-                        }}
-                        className={`w-full p-2.5 rounded-xl bg-dark-950 border text-slate-200 focus:outline-none transition-colors ${
-                          errors.email ? 'border-red-500 focus:border-red-400' : 'border-slate-800 focus:border-gold-500'
-                        }`}
+                        onChange={(e) => setCustomer({ ...customer, email: e.target.value })}
+                        className="w-full p-2.5 rounded-xl bg-dark-950 border border-slate-800 text-slate-200 focus:outline-none focus:border-gold-500"
                       />
-                      {errors.email && (
-                        <span className="text-[10px] text-red-400 flex items-center gap-1 mt-1 font-medium">
-                          <AlertCircle className="w-3 h-3" /> {errors.email}
-                        </span>
-                      )}
                     </div>
                   </div>
 
@@ -404,18 +393,15 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     </div>
                   </div>
 
-                  {/* Payment Method Selector & Allowed Wallets */}
-                  <div className="pt-2 space-y-2">
-                    <label className="block text-slate-300 font-medium">Pasarela de Cobro Directo:</label>
-                    <div className="p-3.5 rounded-xl bg-gradient-to-r from-blue-950/80 via-dark-950 to-blue-950/80 border border-sky-500/40 space-y-2">
-                      <div className="flex items-center gap-2 text-sky-400 font-bold text-xs">
-                        <Wallet className="w-4 h-4 text-sky-400" />
-                        <span>Cualquier Billetera Virtual o Tarjeta</span>
+                  {/* WhatsApp Direct Banner */}
+                  <div className="pt-2">
+                    <div className="p-3.5 rounded-xl bg-gradient-to-r from-emerald-950/80 via-dark-950 to-emerald-950/80 border border-emerald-500/40 flex items-center gap-3 text-emerald-200">
+                      <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                        <Send className="w-5 h-5" />
                       </div>
-                      
-                      <div className="text-[11px] text-slate-300 space-y-1">
-                        <p>• <strong>Pago Único (1 Cuota)</strong>: El dinero se acredita directamente en tu cuenta de Mercado Pago.</p>
-                        <p>• El comprador elige su medio de pago preferido: Billetera Mercado Pago, Ualá, Personal Pay, Cuenta DNI o Tarjetas.</p>
+                      <div>
+                        <span className="font-bold text-xs block text-slate-100">Atención Directa por WhatsApp</span>
+                        <span className="text-[10px] text-slate-300">Te enviamos nuestro CBU / Alias / Mercado Pago al instante para confirmar tu pedido.</span>
                       </div>
                     </div>
                   </div>
@@ -426,21 +412,21 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 <button
                   type="submit"
                   disabled={isProcessing}
-                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 via-sky-500 to-blue-700 text-white font-extrabold text-sm hover:shadow-lg transition-all flex items-center justify-center gap-2 shadow-lg"
+                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-green-500 to-emerald-700 text-white font-extrabold text-sm hover:shadow-emerald-glow transition-all flex items-center justify-center gap-2 shadow-lg"
                 >
                   {isProcessing ? (
-                    <span>Conectando con tu Mercado Pago...</span>
+                    <span>Abriendo WhatsApp...</span>
                   ) : (
                     <>
-                      <Lock className="w-4 h-4" />
-                      <span>Pagar {formatPrice(totalPrice)} (1 Pago Único)</span>
+                      <Send className="w-4 h-4" />
+                      <span>Enviar Pedido por WhatsApp ({formatPrice(totalPrice)})</span>
                     </>
                   )}
                 </button>
 
                 <div className="flex items-center justify-center gap-1 text-[10px] text-slate-400">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Acreditación Directa en tu Cuenta Oficial de Mercado Pago</span>
+                  <span>Contacto Directo e Inmediato con la Tienda</span>
                 </div>
               </div>
             </form>
