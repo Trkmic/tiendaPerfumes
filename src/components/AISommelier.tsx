@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { Bot, Sparkles, X, Check, ArrowRight, RefreshCw, Award, Send } from 'lucide-react';
+import { Bot, Sparkles, X, Check, ArrowRight, RefreshCw, Award } from 'lucide-react';
 import type { Perfume, AISommelierQuiz, AISommelierRecommendation } from '../types';
-import { sendN8nWebhook } from '../lib/n8nWebhook';
 
 interface AISommelierProps {
   perfumes: Perfume[];
@@ -28,7 +27,6 @@ export const AISommelier: React.FC<AISommelierProps> = ({
 
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [recommendations, setRecommendations] = useState<AISommelierRecommendation[]>([]);
-  const [sentLead, setSentLead] = useState<boolean>(false);
 
   const handleCalculate = () => {
     setIsAnalyzing(true);
@@ -74,38 +72,6 @@ export const AISommelier: React.FC<AISommelierProps> = ({
       setIsAnalyzing(false);
       setStep(5); // Pantalla de Resultados
     }, 1200);
-  };
-
-  const handleSendLeadToN8n = async () => {
-    if (recommendations.length === 0) return;
-    const topMatch = recommendations[0].perfume;
-
-    await sendN8nWebhook({
-      eventType: 'ai_recommendation_lead',
-      customer: {
-        fullName: 'Cliente Sommelier IA',
-        phone: '+549110000000',
-        email: 'consulta-ia@cliente.com',
-        city: 'Consulta Web',
-        address: 'Frontend App',
-        paymentMethod: 'whatsapp_direct',
-      },
-      items: [
-        {
-          name: topMatch.name,
-          brand: topMatch.brand,
-          ml: topMatch.mlOptions[0],
-          qty: 1,
-          price: topMatch.price
-        }
-      ],
-      totalPrice: topMatch.price,
-      timestamp: new Date().toISOString(),
-      notes: `Recomendación Sommelier IA: Preferencia ${quiz.preferredVibe}, Ocasión ${quiz.occasion}`
-    });
-
-    setSentLead(true);
-    setTimeout(() => setSentLead(false), 3000);
   };
 
   return (
@@ -224,7 +190,7 @@ export const AISommelier: React.FC<AISommelierProps> = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
-                { id: 'amaderado_oriental', label: '🪵 Opulento Árabe (Oud, Ámbar & Especias)', desc: 'Perfil rico, exótico de medio oriente, azafrán y maderas nobles' },
+                { id: 'amaderado_oriental', label: '🕌 Opulento Árabe (Oud, Ámbar & Especias)', desc: 'Perfil rico, exótico de medio oriente, azafrán y maderas nobles' },
                 { id: 'dulce_gourmand', label: '🍫 Dulce Gourmand (Vainilla, Praliné & Dátiles)', desc: 'Aroma comestible, cálido, adictivo y envolvente' },
                 { id: 'especiado_misterioso', label: '🌿 Especiado & Ahumado (Tabaco & Cuero)', desc: 'Misterioso, masculino y con personalidad imponente' },
                 { id: 'fresco_citrico', label: '🍋 Fresco Cítrico & Marino (Limón & Menta)', desc: 'Limpio, energizante y vibrante' },
@@ -265,7 +231,7 @@ export const AISommelier: React.FC<AISommelierProps> = ({
                 <div>• Ocasión: <strong className="text-gold-300">{quiz.occasion}</strong></div>
                 <div>• Clima: <strong className="text-emerald-300">{quiz.season}</strong></div>
                 <div>• Familia: <strong className="text-purple-300">{quiz.preferredVibe.replace('_', ' ')}</strong></div>
-                <div>• Modelo IA: <strong className="text-blue-300">Niche Sommelier v2.6</strong></div>
+                <div>• Asistente IA: <strong className="text-blue-300">Niche Sommelier</strong></div>
               </div>
             </div>
 
@@ -360,22 +326,6 @@ export const AISommelier: React.FC<AISommelierProps> = ({
                   </button>
                 </div>
               ))}
-            </div>
-
-            {/* Dispatch Lead via n8n */}
-            <div className="pt-4 border-t border-slate-800 flex items-center justify-between text-xs">
-              <span className="text-slate-400">¿Quieres recibir este reporte personalizado por WhatsApp?</span>
-              <button
-                onClick={handleSendLeadToN8n}
-                className={`px-3 py-1.5 rounded-lg border font-bold flex items-center gap-1.5 transition-all ${
-                  sentLead
-                    ? 'bg-emerald-600 text-white border-emerald-500'
-                    : 'bg-dark-950 text-gold-400 border-gold-500/40 hover:bg-gold-500 hover:text-black'
-                }`}
-              >
-                <Send className="w-3.5 h-3.5" />
-                <span>{sentLead ? '¡Enviado a n8n!' : 'Enviar a mi WhatsApp'}</span>
-              </button>
             </div>
 
           </div>
