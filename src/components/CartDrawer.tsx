@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { X, Trash2, ShoppingBag, ArrowRight, Check, Send, ShieldCheck, AlertCircle, PhoneCall, Clock, CheckCircle2 } from 'lucide-react';
+import { X, Trash2, ShoppingBag, ArrowRight, Check, Send, ShieldCheck, AlertCircle, PhoneCall, Clock, CheckCircle2, Mail } from 'lucide-react';
 import type { CartItem, CustomerDetails } from '../types';
 import { sendN8nWebhook } from '../lib/n8nWebhook';
 import { saveOrder } from '../lib/supabase';
+import { sendOrderEmailNotification, TARGET_EMAIL } from '../lib/emailNotifier';
 import { formatPrice } from '../utils/format';
 
 interface CartDrawerProps {
@@ -105,10 +106,13 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     // 1. Guardar orden en la base de datos Supabase
     await saveOrder(payload);
 
-    // 2. Disparar Webhook n8n para notificar al vendedor por email/plataforma
+    // 2. Enviar notificación directa por email a trkmicignacio@gmail.com
+    await sendOrderEmailNotification(payload);
+
+    // 3. Disparar Webhook n8n para notificaciones adicionales
     sendN8nWebhook(payload).catch(() => {});
 
-    // 3. Formatear mensaje para opción de notificar por WhatsApp al vendedor (+54 9 11 2716-1063)
+    // 4. Formatear mensaje para opción de notificar por WhatsApp al vendedor (+54 9 11 2716-1063)
     const orderLines = items.map(
       i => `• *${i.perfume.name}* (${i.selectedMl}ml) x${i.quantity} -> ${formatPrice(i.perfume.price * i.quantity)}`
     ).join('\n');
@@ -169,7 +173,7 @@ Quedo a la espera de sus datos bancarios (CBU / Alias / Mercado Pago) para reali
                 </span>
                 <h4 className="font-serif font-bold text-2xl text-slate-100">¡Pedido Registrado con Éxito!</h4>
                 <p className="text-xs sm:text-sm text-slate-300 font-light leading-relaxed px-2">
-                  Hemos recibido tu solicitud de compra. <strong className="text-gold-300 font-semibold">El vendedor se pondrá en contacto contigo a la brevedad</strong> al número <strong className="text-emerald-400">{customer.phone}</strong> para proporcionarte los datos bancarios (CBU / Alias / Mercado Pago) y coordinar el envío de tu paquete.
+                  Hemos recibido tu solicitud de compra. Notificación enviada a <strong className="text-gold-300 font-semibold">{TARGET_EMAIL}</strong>. El vendedor te contactará a la brevedad al número <strong className="text-emerald-400">{customer.phone}</strong> para enviarte el CBU / Alias y coordinar el envío.
                 </p>
               </div>
 
@@ -182,9 +186,9 @@ Quedo a la espera de sus datos bancarios (CBU / Alias / Mercado Pago) para reali
                 <p className="text-slate-300">• <strong>WhatsApp:</strong> {customer.phone}</p>
                 <p className="text-slate-300">• <strong>Destino:</strong> {customer.city}, {customer.address}</p>
                 <p className="text-slate-300">• <strong>Monto Total a Transferir:</strong> <span className="text-gold-400 font-bold">{formatPrice(totalPrice)}</span></p>
-                <p className="text-slate-400 text-[11px] pt-1 flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5 text-gold-400" /> El vendedor te contactará pronto.
-                </p>
+                <div className="pt-2 border-t border-slate-900 text-[11px] text-emerald-400 flex items-center gap-1">
+                  <Mail className="w-3.5 h-3.5" /> Email enviado a {TARGET_EMAIL}
+                </div>
               </div>
 
               {/* OPTIONAL DIRECT WHATSAPP ACTION BUTTON */}
@@ -425,7 +429,7 @@ Quedo a la espera de sus datos bancarios (CBU / Alias / Mercado Pago) para reali
                         <PhoneCall className="w-5 h-5" />
                       </div>
                       <div>
-                        <span className="font-bold text-xs block text-slate-100">Contacto Directo del Vendedor</span>
+                        <span className="font-bold text-xs block text-slate-100">Notificación Directa a {TARGET_EMAIL}</span>
                         <span className="text-[10px] text-slate-300">Te contactaremos para enviarte el CBU / Alias / Mercado Pago y coordinar el envío.</span>
                       </div>
                     </div>
@@ -440,7 +444,7 @@ Quedo a la espera de sus datos bancarios (CBU / Alias / Mercado Pago) para reali
                   className="w-full py-4 rounded-2xl bg-gradient-to-r from-gold-500 via-gold-400 to-gold-600 text-dark-950 font-extrabold text-sm hover:shadow-gold-glow transition-all flex items-center justify-center gap-2 shadow-lg"
                 >
                   {isProcessing ? (
-                    <span>Registrando Pedido...</span>
+                    <span>Enviando Pedido y Notificando por Mail...</span>
                   ) : (
                     <>
                       <Check className="w-4 h-4" />
@@ -451,7 +455,7 @@ Quedo a la espera de sus datos bancarios (CBU / Alias / Mercado Pago) para reali
 
                 <div className="flex items-center justify-center gap-1 text-[10px] text-slate-400">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>El vendedor se contactará contigo para coordinar el pago</span>
+                  <span>Se enviará un mail instantáneo a {TARGET_EMAIL}</span>
                 </div>
               </div>
             </form>
