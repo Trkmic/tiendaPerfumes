@@ -118,8 +118,8 @@ ${orderLines}
 ¿Me confirman disponibilidad y los datos bancarios / alias o link de pago para coordinar la entrega? ¡Muchas gracias!`;
 
     const encodedMessage = encodeURIComponent(rawMessage);
-    const rawPhone = import.meta.env.VITE_WHATSAPP_NUMBER || '5491100000000';
-    // Limpiar espacios, signos + y guiones para la API wa.me
+    // Número oficial configurado: +54 9 11 2716-1063 -> 5491127161063
+    const rawPhone = import.meta.env.VITE_WHATSAPP_NUMBER || '5491127161063';
     const cleanPhone = rawPhone.replace(/[^0-9]/g, '');
 
     // Abrir WhatsApp directamente
@@ -173,7 +173,7 @@ ${orderLines}
                 </p>
                 <p className="text-slate-300">• Cliente: {customer.fullName}</p>
                 <p className="text-slate-300">• Total a Pagar: {formatPrice(totalPrice)}</p>
-                <p className="text-slate-300">• Canal: WhatsApp Directo Personalizado</p>
+                <p className="text-slate-300">• WhatsApp Oficial: +54 9 11 2716-1063</p>
               </div>
 
               <button
@@ -270,7 +270,7 @@ ${orderLines}
 
                   <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
                     <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Te atendemos al instante por WhatsApp para coordinar pago y envío</span>
+                    <span>Atención inmediata al +54 9 11 2716-1063</span>
                   </div>
                 </div>
               )}
@@ -402,7 +402,7 @@ ${orderLines}
                         <Send className="w-5 h-5" />
                       </div>
                       <div>
-                        <span className="font-bold text-xs block text-slate-100">Atención Directa por WhatsApp</span>
+                        <span className="font-bold text-xs block text-slate-100">Atención Directa al +54 9 11 2716-1063</span>
                         <span className="text-[10px] text-slate-300">Te enviamos nuestro CBU / Alias / Mercado Pago al instante para confirmar tu pedido.</span>
                       </div>
                     </div>
