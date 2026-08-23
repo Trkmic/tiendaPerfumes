@@ -1,5 +1,6 @@
 import React from 'react';
 import { Sparkles, ShieldCheck, Truck, Bot, ArrowRight, Star } from 'lucide-react';
+import { formatPrice } from '../utils/format';
 
 interface HeroProps {
   onOpenSommelier: () => void;
@@ -112,8 +113,8 @@ export const Hero: React.FC<HeroProps> = ({ onOpenSommelier, onExploreClick }) =
                   <p className="text-xs text-slate-400">Armaf Dubai &bull; Extracto de Perfume</p>
                 </div>
                 <div className="text-right">
-                  <span className="text-xs text-slate-400 line-through mr-1">$95</span>
-                  <span className="font-bold text-xl text-gold-400">$75</span>
+                  <span className="text-xs text-slate-400 line-through mr-1.5">{formatPrice(95000)}</span>
+                  <span className="font-bold text-xl text-gold-400">{formatPrice(75000)}</span>
                 </div>
               </div>
 
