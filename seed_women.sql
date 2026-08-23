@@ -1,4 +1,4 @@
--- Script SQL para insertar Perfumes de Mujer en Supabase
+-- Script SQL para insertar Perfumes de Mujer en Supabase (Sintaxis PostgreSQL Corregida)
 
 INSERT INTO perfumes (
   id, name, brand, category, gender, price, original_price, ml_options, image, description,
@@ -98,7 +98,7 @@ INSERT INTO perfumes (
 ),
 (
   'dior-jadore',
-  'J\'adore Eau de Parfum',
+  'J''adore Eau de Parfum',
   'Dior Paris',
   'disenador',
   'mujer',
@@ -106,7 +106,7 @@ INSERT INTO perfumes (
   205.00,
   ARRAY[50, 100],
   '/images/royal_blue.png',
-  'Un ramo floral extraordinario y voluptuoso. J\'adore une la esencia de Ylang-Ylang con notas afrutadas de Rosa Damascena y Jazmín de Grasse para crear un perfume de oro líquido puro.',
+  'Un ramo floral extraordinario y voluptuoso. J''adore une la esencia de Ylang-Ylang con notas afrutadas de Rosa Damascena y Jazmín de Grasse para crear un perfume de oro líquido puro.',
   ARRAY['Melón', 'Durazno', 'Pera', 'Bergamota', 'Mandarina'],
   ARRAY['Jazmín', 'Lirio de los Valles', 'Rosa', 'Orquídea', 'Violeta'],
   ARRAY['Almizcle', 'Vainilla', 'Zarzamora', 'Cedro'],
