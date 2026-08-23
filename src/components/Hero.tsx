@@ -72,7 +72,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenSommelier, onExploreClick }) =
 
               <div className="text-center lg:text-left">
                 <div className="text-gold-400 font-bold text-xl">24/7</div>
-                <p className="text-xs text-slate-400">Atención por WhatsApp</p>
+                <p className="text-xs text-slate-400">Atención Personalizada</p>
               </div>
             </div>
 
@@ -131,7 +131,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenSommelier, onExploreClick }) =
             </div>
             <div>
               <h4 className="font-semibold text-slate-200 text-sm">Garantía 100% Original</h4>
-              <p className="text-xs text-slate-400">Importación directa desde Dubai y Europa sin intermediarios.</p>
+              <p className="text-xs text-slate-400">Importación directa de fragancias auténticas y certificadas.</p>
             </div>
           </div>
 
@@ -140,8 +140,8 @@ export const Hero: React.FC<HeroProps> = ({ onOpenSommelier, onExploreClick }) =
               <Truck className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="font-semibold text-slate-200 text-sm">Despacho Inmediato 24h</h4>
-              <p className="text-xs text-slate-400">Envío protegido con empaque de seguridad y seguimiento.</p>
+              <h4 className="font-semibold text-slate-200 text-sm">Envío Inmediato y Protegido</h4>
+              <p className="text-xs text-slate-400">Despacho veloz con empaque de alta seguridad a todo el país.</p>
             </div>
           </div>
 

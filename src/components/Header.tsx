@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { ShoppingBag, Sparkles, Search, Bot, Layers, Menu, X, PhoneCall } from 'lucide-react';
+import { ShoppingBag, Sparkles, Search, Bot, Menu, X } from 'lucide-react';
 import type { PerfumeCategory } from '../types';
 
 interface HeaderProps {
   cartCount: number;
   onOpenCart: () => void;
   onOpenSommelier: () => void;
-  onOpenN8nModal: () => void;
   selectedCategory: PerfumeCategory | 'todos';
   onSelectCategory: (cat: PerfumeCategory | 'todos') => void;
   searchQuery: string;
@@ -17,7 +16,6 @@ export const Header: React.FC<HeaderProps> = ({
   cartCount,
   onOpenCart,
   onOpenSommelier,
-  onOpenN8nModal,
   selectedCategory,
   onSelectCategory,
   searchQuery,
@@ -25,12 +23,26 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const handleCategoryClick = (cat: PerfumeCategory | 'todos') => {
+    onSelectCategory(cat);
+    const element = document.getElementById('catalog-section');
+    element?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleSearchInput = (q: string) => {
+    onSearchChange(q);
+    if (q.trim().length > 0) {
+      const element = document.getElementById('catalog-section');
+      element?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <header className="sticky top-0 z-40 w-full glass-panel border-b border-gold-500/20 backdrop-blur-md bg-dark-950/80">
       {/* Top Banner Announcement */}
       <div className="bg-gradient-to-r from-emerald-950 via-dark-900 to-emerald-950 text-gold-400 text-xs py-1.5 px-4 text-center border-b border-gold-500/10 font-medium tracking-wide flex items-center justify-center gap-2">
         <Sparkles className="w-3.5 h-3.5 text-gold-400 animate-pulse" />
-        <span>Envío gratis a todo el país en compras superiores a $100 &bull; 100% Perfumes Originales &bull; Pago con MercadoPago y WhatsApp</span>
+        <span>Envío gratis a todo el país en compras superiores a $100 &bull; 100% Perfumes Originales &bull; Pagos Seguros</span>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -63,7 +75,13 @@ export const Header: React.FC<HeaderProps> = ({
                 type="text"
                 placeholder="Buscar por marca, nota (Oud, Vainilla, Ámbar) o perfume..."
                 value={searchQuery}
-                onChange={(e) => onSearchChange(e.target.value)}
+                onChange={(e) => handleSearchInput(e.target.value)}
+                onFocus={() => {
+                  if (searchQuery.trim().length > 0) {
+                    const element = document.getElementById('catalog-section');
+                    element?.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
                 className="w-full pl-10 pr-4 py-2 bg-dark-900/90 border border-slate-800 focus:border-gold-500/60 rounded-full text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-gold-500/50 transition-all"
               />
               {searchQuery && (
@@ -83,20 +101,10 @@ export const Header: React.FC<HeaderProps> = ({
             {/* AI Sommelier Button */}
             <button
               onClick={onOpenSommelier}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-gradient-to-r from-gold-500/10 via-emerald-900/30 to-gold-500/20 border border-gold-500/40 text-gold-300 hover:text-white hover:border-gold-400 transition-all text-xs sm:text-sm font-medium shadow-sm hover:shadow-gold-glow"
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-gold-500/10 via-emerald-900/30 to-gold-500/20 border border-gold-500/40 text-gold-300 hover:text-white hover:border-gold-400 transition-all text-xs sm:text-sm font-medium shadow-sm hover:shadow-gold-glow"
             >
               <Bot className="w-4 h-4 text-gold-400 animate-bounce" />
               <span className="hidden sm:inline">Sommelier IA</span>
-            </button>
-
-            {/* n8n Automation Button */}
-            <button
-              onClick={onOpenN8nModal}
-              title="Configuración de Automatizaciones n8n"
-              className="hidden lg:flex items-center gap-1.5 px-3 py-2 rounded-full bg-dark-900 border border-slate-800 text-slate-400 hover:text-gold-400 hover:border-slate-700 transition-all text-xs font-medium"
-            >
-              <Layers className="w-3.5 h-3.5 text-emerald-500" />
-              <span>n8n Webhook</span>
             </button>
 
             {/* Shopping Cart Button */}
@@ -126,10 +134,10 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Category Navigation Bar */}
       <div className="border-t border-slate-800/60 bg-dark-950/60 backdrop-blur">
-        <div className="max-w-7xl mx-auto px-4 flex items-center justify-between overflow-x-auto no-scrollbar py-2.5">
+        <div className="max-w-7xl mx-auto px-4 flex items-center justify-center sm:justify-start overflow-x-auto no-scrollbar py-2.5">
           <div className="flex items-center gap-2 sm:gap-6 min-w-max">
             <button
-              onClick={() => onSelectCategory('todos')}
+              onClick={() => handleCategoryClick('todos')}
               className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
                 selectedCategory === 'todos'
                   ? 'bg-gold-500 text-dark-950 font-bold shadow'
@@ -139,7 +147,7 @@ export const Header: React.FC<HeaderProps> = ({
               ✨ Todos los Perfumes
             </button>
             <button
-              onClick={() => onSelectCategory('arabe')}
+              onClick={() => handleCategoryClick('arabe')}
               className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
                 selectedCategory === 'arabe'
                   ? 'bg-emerald-800 text-gold-300 border border-gold-500/40 font-bold shadow'
@@ -149,7 +157,7 @@ export const Header: React.FC<HeaderProps> = ({
               🕌 Perfumes Árabes (Oud & Ámbar)
             </button>
             <button
-              onClick={() => onSelectCategory('disenador')}
+              onClick={() => handleCategoryClick('disenador')}
               className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
                 selectedCategory === 'disenador'
                   ? 'bg-gold-500 text-dark-950 font-bold shadow'
@@ -159,7 +167,7 @@ export const Header: React.FC<HeaderProps> = ({
               💎 Perfumes de Diseñador
             </button>
             <button
-              onClick={() => onSelectCategory('nicho')}
+              onClick={() => handleCategoryClick('nicho')}
               className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
                 selectedCategory === 'nicho'
                   ? 'bg-gradient-to-r from-purple-900 to-dark-900 text-gold-300 border border-purple-500/40 font-bold shadow'
@@ -168,11 +176,6 @@ export const Header: React.FC<HeaderProps> = ({
             >
               👑 Perfumería de Nicho
             </button>
-          </div>
-
-          <div className="hidden lg:flex items-center gap-2 text-xs text-slate-400 pl-4 border-l border-slate-800">
-            <PhoneCall className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Asesoría Directa por WhatsApp</span>
           </div>
         </div>
       </div>
@@ -186,7 +189,7 @@ export const Header: React.FC<HeaderProps> = ({
               type="text"
               placeholder="Buscar perfume o notas..."
               value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
+              onChange={(e) => handleSearchInput(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-dark-950 border border-slate-800 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-gold-500"
             />
           </div>
@@ -200,16 +203,6 @@ export const Header: React.FC<HeaderProps> = ({
                 <span>Asistente Sommelier IA</span>
               </div>
               <span className="text-xs bg-gold-500 text-black font-bold px-2 py-0.5 rounded">IA Active</span>
-            </button>
-
-            <button
-              onClick={() => { onOpenN8nModal(); setMobileMenuOpen(false); }}
-              className="flex items-center justify-between p-3 rounded-lg bg-dark-950 text-slate-300 text-sm"
-            >
-              <div className="flex items-center gap-2">
-                <Layers className="w-4 h-4 text-emerald-400" />
-                <span>Webhook n8n (WhatsApp / Gmail)</span>
-              </div>
             </button>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, Phone, Mail, MapPin, Globe, Share2, Send } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import type { PerfumeCategory } from '../types';
 
 interface FooterProps {
@@ -8,6 +8,13 @@ interface FooterProps {
 }
 
 export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenSommelier }) => {
+
+  const handleCollectionClick = (cat: PerfumeCategory | 'todos') => {
+    onSelectCategory(cat);
+    const element = document.getElementById('catalog-section');
+    element?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <footer className="bg-dark-950 border-t border-gold-500/20 text-slate-400 text-xs pt-16 pb-12 relative overflow-hidden">
       
@@ -16,7 +23,7 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenSommelie
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-12">
         
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           
           {/* Col 1: Brand */}
           <div className="space-y-4 md:col-span-1">
@@ -32,18 +39,6 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenSommelie
             <p className="text-slate-400 font-light leading-relaxed">
               Especialistas en perfumería árabe de nicho (Oud, Ámbar, Azafrán) y fragancias internacionales de diseñador. Calidad garantizada 100% original.
             </p>
-
-            <div className="flex items-center gap-3 pt-1">
-              <a href="#" className="p-2 rounded-lg bg-dark-900 text-gold-400 border border-slate-800 hover:border-gold-500 transition-colors">
-                <Globe className="w-4 h-4" />
-              </a>
-              <a href="#" className="p-2 rounded-lg bg-dark-900 text-gold-400 border border-slate-800 hover:border-gold-500 transition-colors">
-                <Share2 className="w-4 h-4" />
-              </a>
-              <a href="#" className="p-2 rounded-lg bg-dark-900 text-emerald-400 border border-slate-800 hover:border-emerald-500 transition-colors">
-                <Send className="w-4 h-4" />
-              </a>
-            </div>
           </div>
 
           {/* Col 2: Navigation */}
@@ -53,17 +48,17 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenSommelie
             </h4>
             <ul className="space-y-2">
               <li>
-                <button onClick={() => onSelectCategory('arabe')} className="hover:text-gold-400 transition-colors">
+                <button onClick={() => handleCollectionClick('arabe')} className="hover:text-gold-400 transition-colors text-left">
                   🕌 Perfumes Árabes (Oud & Spices)
                 </button>
               </li>
               <li>
-                <button onClick={() => onSelectCategory('disenador')} className="hover:text-gold-400 transition-colors">
+                <button onClick={() => handleCollectionClick('disenador')} className="hover:text-gold-400 transition-colors text-left">
                   💎 Perfumes de Diseñador
                 </button>
               </li>
               <li>
-                <button onClick={() => onSelectCategory('nicho')} className="hover:text-gold-400 transition-colors">
+                <button onClick={() => handleCollectionClick('nicho')} className="hover:text-gold-400 transition-colors text-left">
                   👑 Perfumería de Nicho
                 </button>
               </li>
@@ -76,38 +71,16 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenSommelie
             </ul>
           </div>
 
-          {/* Col 3: Customer Care & FAQ */}
+          {/* Col 3: Garantía & Envíos */}
           <div className="space-y-3">
             <h4 className="font-serif font-bold text-slate-100 text-sm uppercase tracking-wider text-gold-400">
-              Garantía & FAQ
+              Garantía & Envíos
             </h4>
             <ul className="space-y-2 text-slate-400">
-              <li>• ¿Cómo sé si el perfume es original? (Sello lote de autenticidad)</li>
-              <li>• Envíos protegidos 24/48 hs a todo el país</li>
-              <li>• Decants y frascos de muestra disponibles</li>
-              <li>• Pago seguro con MercadoPago y WhatsApp</li>
+              <li>• Garantía de autenticidad 100% original en cada fragancia</li>
+              <li>• Envíos protegidos y seguros a todo el país</li>
+              <li>• Métodos de pago 100% seguros y protegidos</li>
             </ul>
-          </div>
-
-          {/* Col 4: Contact */}
-          <div className="space-y-3">
-            <h4 className="font-serif font-bold text-slate-100 text-sm uppercase tracking-wider text-gold-400">
-              Atención al Cliente
-            </h4>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-slate-300">
-                <Phone className="w-4 h-4 text-emerald-400" />
-                <span>WhatsApp: +54 9 11 0000-0000</span>
-              </div>
-              <div className="flex items-center gap-2 text-slate-300">
-                <Mail className="w-4 h-4 text-gold-400" />
-                <span>ventas@luxeoud-perfumes.com</span>
-              </div>
-              <div className="flex items-center gap-2 text-slate-300">
-                <MapPin className="w-4 h-4 text-purple-400" />
-                <span>Boutique Central & Envíos Globales</span>
-              </div>
-            </div>
           </div>
 
         </div>
@@ -118,7 +91,6 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenSommelie
           <div className="flex items-center gap-4">
             <a href="#" className="hover:text-slate-400">Términos & Condiciones</a>
             <a href="#" className="hover:text-slate-400">Política de Privacidad</a>
-            <a href="#" className="hover:text-slate-400">Integración n8n Webhook</a>
           </div>
         </div>
 
