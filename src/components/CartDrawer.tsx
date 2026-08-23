@@ -118,10 +118,12 @@ ${orderLines}
 ¿Me confirman disponibilidad y los datos bancarios / alias o link de pago para coordinar la entrega? ¡Muchas gracias!`;
 
     const encodedMessage = encodeURIComponent(rawMessage);
-    const whatsappPhone = import.meta.env.VITE_WHATSAPP_NUMBER || '5491100000000';
+    const rawPhone = import.meta.env.VITE_WHATSAPP_NUMBER || '5491100000000';
+    // Limpiar espacios, signos + y guiones para la API wa.me
+    const cleanPhone = rawPhone.replace(/[^0-9]/g, '');
 
     // Abrir WhatsApp directamente
-    window.open(`https://wa.me/${whatsappPhone}?text=${encodedMessage}`, '_blank');
+    window.open(`https://wa.me/${cleanPhone}?text=${encodedMessage}`, '_blank');
 
     setIsProcessing(false);
     setCheckoutStep('success');
