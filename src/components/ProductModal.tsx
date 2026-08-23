@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
-import { X, Star, ShoppingBag, Clock, Wind, Check, ShieldCheck, Heart } from 'lucide-react';
+import { X, Star, ShoppingBag, Clock, Wind, Check, ShieldCheck } from 'lucide-react';
 import type { Perfume } from '../types';
 import { formatPrice } from '../utils/format';
 
 interface ProductModalProps {
   perfume: Perfume | null;
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
   onAddToCart: (p: Perfume, ml: number) => void;
 }
 
 export const ProductModal: React.FC<ProductModalProps> = ({
   perfume,
-  isOpen,
+  isOpen = true,
   onClose,
   onAddToCart,
 }) => {
