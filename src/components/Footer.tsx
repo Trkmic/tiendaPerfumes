@@ -1,13 +1,14 @@
 import React from 'react';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, ShieldCheck } from 'lucide-react';
 import type { PerfumeCategory } from '../types';
 
 interface FooterProps {
   onSelectCategory: (cat: PerfumeCategory | 'todos') => void;
   onOpenSommelier: () => void;
+  onOpenLegal: (type: 'terms' | 'privacy') => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenSommelier }) => {
+export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenSommelier, onOpenLegal }) => {
 
   const handleCollectionClick = (cat: PerfumeCategory | 'todos') => {
     onSelectCategory(cat);
@@ -89,8 +90,18 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenSommelie
         <div className="pt-8 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
           <p>&copy; 2026 LuxeOud & Co. Todos los derechos reservados. Perfumería Árabe & Diseñador.</p>
           <div className="flex items-center gap-4">
-            <a href="#" className="hover:text-slate-400">Términos & Condiciones</a>
-            <a href="#" className="hover:text-slate-400">Política de Privacidad</a>
+            <button
+              onClick={() => onOpenLegal('terms')}
+              className="hover:text-gold-400 transition-colors underline font-medium"
+            >
+              Términos & Condiciones
+            </button>
+            <button
+              onClick={() => onOpenLegal('privacy')}
+              className="hover:text-gold-400 transition-colors underline font-medium"
+            >
+              Política de Privacidad
+            </button>
           </div>
         </div>
 

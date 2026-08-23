@@ -6,6 +6,7 @@ import { ProductModal } from './components/ProductModal';
 import { AISommelier } from './components/AISommelier';
 import { CartDrawer } from './components/CartDrawer';
 import { N8nAutomationsModal } from './components/N8nAutomationsModal';
+import { LegalModal } from './components/LegalModal';
 import { Footer } from './components/Footer';
 import type { Perfume, CartItem, PerfumeCategory } from './types';
 import { getPerfumes } from './lib/supabase';
@@ -28,6 +29,7 @@ export function App() {
   const [selectedPerfumeModal, setSelectedPerfumeModal] = useState<Perfume | null>(null);
   const [isSommelierOpen, setIsSommelierOpen] = useState<boolean>(false);
   const [isN8nModalOpen, setIsN8nModalOpen] = useState<boolean>(false);
+  const [legalModalType, setLegalModalType] = useState<'terms' | 'privacy' | null>(null);
 
   // Load Perfumes Data from Supabase / Fallback
   useEffect(() => {
@@ -218,6 +220,7 @@ export function App() {
       <Footer
         onSelectCategory={setSelectedCategory}
         onOpenSommelier={() => setIsSommelierOpen(true)}
+        onOpenLegal={(type) => setLegalModalType(type)}
       />
 
       {/* Modals & Slide-overs */}
@@ -241,6 +244,12 @@ export function App() {
         onUpdateQuantity={handleUpdateCartQuantity}
         onRemoveItem={handleRemoveCartItem}
         onClearCart={handleClearCart}
+      />
+
+      <LegalModal
+        isOpen={!!legalModalType}
+        type={legalModalType}
+        onClose={() => setLegalModalType(null)}
       />
 
       <N8nAutomationsModal
