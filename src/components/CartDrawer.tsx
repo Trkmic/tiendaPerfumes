@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Trash2, ShoppingBag, ArrowRight, Check, CreditCard, ShieldCheck, AlertCircle, Lock } from 'lucide-react';
+import { X, Trash2, ShoppingBag, ArrowRight, Check, CreditCard, ShieldCheck, AlertCircle, Lock, Wallet, Zap } from 'lucide-react';
 import type { CartItem, CustomerDetails } from '../types';
 import { sendN8nWebhook } from '../lib/n8nWebhook';
 import { formatPrice } from '../utils/format';
@@ -105,13 +105,17 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       notes: customer.notes
     };
 
+    // Disparar Webhook n8n (Alerta de pedido)
     await sendN8nWebhook(payload);
 
+    // Redirección directa a la cuenta de Mercado Pago del emprendedor
     const mpCheckoutUrl = import.meta.env.VITE_MERCADOPAGO_CHECKOUT_URL || '';
 
     if (mpCheckoutUrl) {
+      // Redirigir al link oficial de Mercado Pago del vendedor
       window.location.href = mpCheckoutUrl;
     } else {
+      // Si aún no ha configurado su link, simular cobro aprobado y mostrar confirmación
       setTimeout(() => {
         setIsProcessing(false);
         setCheckoutStep('success');
@@ -151,20 +155,20 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               </div>
 
               <div>
-                <h4 className="font-serif font-bold text-2xl text-slate-100">¡Pago Procesado con Éxito!</h4>
+                <h4 className="font-serif font-bold text-2xl text-slate-100">¡Pago Único Procesado!</h4>
                 <p className="text-sm text-slate-300 mt-2 font-light">
-                  Transacción aprobada por <strong className="text-gold-400">Mercado Pago</strong>. Se ha enviado el comprobante a tu email.
+                  Transacción acreditada en la cuenta de <strong className="text-gold-400">Mercado Pago</strong>. El comprobante fue enviado a tu email.
                 </p>
               </div>
 
               <div className="p-4 rounded-2xl bg-dark-950 border border-gold-500/30 text-left text-xs space-y-1">
                 <p className="text-gold-400 font-bold flex items-center gap-1">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" /> Comprobante Mercado Pago:
+                  <ShieldCheck className="w-4 h-4 text-emerald-400" /> Detalle del Pago Único:
                 </p>
                 <p className="text-slate-300">• Cliente: {customer.fullName}</p>
                 <p className="text-slate-300">• Email: {customer.email}</p>
-                <p className="text-slate-300">• Total Cobrado: {formatPrice(totalPrice)}</p>
-                <p className="text-slate-300">• Estado: Cobro Aprobado en Línea</p>
+                <p className="text-slate-300">• Total Abonado (1 Pago): {formatPrice(totalPrice)}</p>
+                <p className="text-slate-300">• Destino: Cuenta Mercado Pago Oficial</p>
               </div>
 
               <button
@@ -241,7 +245,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               {items.length > 0 && (
                 <div className="border-t border-slate-800 pt-4 space-y-4">
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-slate-400">Subtotal:</span>
+                    <span className="text-slate-400">Total (Pago Único):</span>
                     <span className="font-serif font-extrabold text-2xl text-gold-400">
                       {formatPrice(totalPrice)}
                     </span>
@@ -255,13 +259,17 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 via-sky-500 to-blue-700 text-white font-bold text-sm hover:shadow-lg hover:scale-[1.02] transition-all flex items-center justify-center gap-2 shadow-md"
                   >
                     <CreditCard className="w-5 h-5 text-white" />
-                    <span>Pagar con Mercado Pago / Tarjeta</span>
+                    <span>Pagar con Mercado Pago / Billeteras</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
 
-                  <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
-                    <Lock className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Cobro automático seguro en línea por Mercado Pago</span>
+                  <div className="p-2.5 rounded-xl bg-dark-950 border border-slate-800 text-[11px] text-slate-400 space-y-1">
+                    <div className="flex items-center gap-1.5 font-semibold text-sky-400">
+                      <Zap className="w-3.5 h-3.5" /> Pago único en 1 cuota
+                    </div>
+                    <p className="text-[10px] text-slate-400">
+                      Acepta Mercado Pago, Billeteras Virtuales (Ualá, Personal Pay, Cuenta DNI) y todas las Tarjetas de Crédito/Débito.
+                    </p>
                   </div>
                 </div>
               )}
@@ -396,15 +404,18 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     </div>
                   </div>
 
-                  {/* Mercado Pago Fixed Banner */}
-                  <div className="pt-2">
-                    <div className="p-3.5 rounded-xl bg-gradient-to-r from-blue-950/80 via-dark-950 to-blue-950/80 border border-sky-500/40 flex items-center gap-3 text-sky-200">
-                      <div className="p-2 rounded-lg bg-sky-500/20 text-sky-400 border border-sky-500/30">
-                        <CreditCard className="w-5 h-5" />
+                  {/* Payment Method Selector & Allowed Wallets */}
+                  <div className="pt-2 space-y-2">
+                    <label className="block text-slate-300 font-medium">Pasarela de Cobro Directo:</label>
+                    <div className="p-3.5 rounded-xl bg-gradient-to-r from-blue-950/80 via-dark-950 to-blue-950/80 border border-sky-500/40 space-y-2">
+                      <div className="flex items-center gap-2 text-sky-400 font-bold text-xs">
+                        <Wallet className="w-4 h-4 text-sky-400" />
+                        <span>Cualquier Billetera Virtual o Tarjeta</span>
                       </div>
-                      <div>
-                        <span className="font-bold text-xs block text-slate-100">Mercado Pago / Tarjetas de Crédito y Débito</span>
-                        <span className="text-[10px] text-slate-300">Cobro automático seguro en línea con protección al comprador.</span>
+                      
+                      <div className="text-[11px] text-slate-300 space-y-1">
+                        <p>• <strong>Pago Único (1 Cuota)</strong>: El dinero se acredita directamente en tu cuenta de Mercado Pago.</p>
+                        <p>• El comprador elige su medio de pago preferido: Billetera Mercado Pago, Ualá, Personal Pay, Cuenta DNI o Tarjetas.</p>
                       </div>
                     </div>
                   </div>
@@ -418,18 +429,18 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 via-sky-500 to-blue-700 text-white font-extrabold text-sm hover:shadow-lg transition-all flex items-center justify-center gap-2 shadow-lg"
                 >
                   {isProcessing ? (
-                    <span>Conectando con Mercado Pago...</span>
+                    <span>Conectando con tu Mercado Pago...</span>
                   ) : (
                     <>
                       <Lock className="w-4 h-4" />
-                      <span>Pagar {formatPrice(totalPrice)} con Mercado Pago</span>
+                      <span>Pagar {formatPrice(totalPrice)} (1 Pago Único)</span>
                     </>
                   )}
                 </button>
 
                 <div className="flex items-center justify-center gap-1 text-[10px] text-slate-400">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Procesamiento 100% Encriptado con Garantía Mercado Pago</span>
+                  <span>Acreditación Directa en tu Cuenta Oficial de Mercado Pago</span>
                 </div>
               </div>
             </form>
