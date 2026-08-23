@@ -1,5 +1,5 @@
-import React from 'react';
-import { Star, ShoppingBag, Eye, Award } from 'lucide-react';
+import React, { useState } from 'react';
+import { Star, ShoppingBag, Eye, Award, Check } from 'lucide-react';
 import type { Perfume } from '../types';
 import { formatPrice } from '../utils/format';
 
@@ -14,7 +14,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onOpenModal,
   onAddToCart,
 }) => {
-  const defaultMl = perfume.mlOptions[0] || 100;
+
+  const [selectedMl, setSelectedMl] = useState<number>(perfume.mlOptions[0] || 100);
+  const [added, setAdded] = useState<boolean>(false);
+
+  const handleAdd = () => {
+    onAddToCart(perfume, selectedMl);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1500);
+  };
 
   return (
     <div className="group relative glass-card rounded-3xl overflow-hidden border border-gold-500/20 hover:border-gold-400/60 transition-all duration-500 hover:shadow-gold-glow flex flex-col justify-between bg-dark-900/80">
@@ -90,16 +98,29 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </p>
         </div>
 
-        {/* Notes Chips */}
-        <div className="flex flex-wrap gap-1">
-          {perfume.accords.slice(0, 3).map((accord) => (
-            <span
-              key={accord}
-              className="px-2 py-0.5 rounded-md bg-dark-950 text-[10px] text-slate-400 border border-slate-800/80"
-            >
-              {accord}
-            </span>
-          ))}
+        {/* Size / ML Selector on Card */}
+        <div className="space-y-1 bg-dark-950/60 p-2.5 rounded-2xl border border-slate-800/80">
+          <span className="text-[10px] font-bold text-gold-400 uppercase tracking-wider block">
+            Seleccionar Tamaño / Frasco:
+          </span>
+          <div className="flex flex-wrap gap-1.5">
+            {perfume.mlOptions.map((ml) => (
+              <button
+                key={ml}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedMl(ml);
+                }}
+                className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all border ${
+                  selectedMl === ml
+                    ? 'bg-gold-500 text-dark-950 border-gold-400 shadow-gold-glow'
+                    : 'bg-dark-900 text-slate-400 border-slate-800 hover:border-gold-500/40 hover:text-white'
+                }`}
+              >
+                {ml} ml
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Pricing & Add to Cart Button */}
@@ -119,11 +140,24 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </div>
 
           <button
-            onClick={() => onAddToCart(perfume, defaultMl)}
-            className="px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-gold-500 to-gold-600 text-dark-950 font-bold text-xs hover:shadow-gold-glow hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5"
+            onClick={handleAdd}
+            className={`px-3.5 py-2.5 rounded-2xl font-bold text-xs transition-all flex items-center gap-1.5 shadow-md ${
+              added
+                ? 'bg-emerald-600 text-white'
+                : 'bg-gradient-to-r from-gold-500 to-gold-600 text-dark-950 hover:shadow-gold-glow hover:scale-105 active:scale-95'
+            }`}
           >
-            <ShoppingBag className="w-4 h-4" />
-            <span>Agregar</span>
+            {added ? (
+              <>
+                <Check className="w-4 h-4" />
+                <span>¡Agregado ({selectedMl}ml)!</span>
+              </>
+            ) : (
+              <>
+                <ShoppingBag className="w-4 h-4" />
+                <span>Agregar ({selectedMl}ml)</span>
+              </>
+            )}
           </button>
 
         </div>

@@ -198,7 +198,7 @@ export function App() {
                 key={perfume.id}
                 perfume={perfume}
                 onOpenModal={setSelectedPerfumeModal}
-                onAddToCart={(p) => handleAddToCart(p)}
+                onAddToCart={(p, ml) => handleAddToCart(p, ml)}
               />
             ))}
           </div>
