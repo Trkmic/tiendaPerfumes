@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Trash2, ShoppingBag, ArrowRight, Check, Send, ShieldCheck, AlertCircle, PhoneCall, Clock, CheckCircle2, Mail } from 'lucide-react';
+import { X, Trash2, ShoppingBag, ArrowRight, Check, Send, ShieldCheck, AlertCircle, PhoneCall, CheckCircle2, Mail } from 'lucide-react';
 import type { CartItem, CustomerDetails } from '../types';
 import { sendN8nWebhook } from '../lib/n8nWebhook';
 import { saveOrder } from '../lib/supabase';
