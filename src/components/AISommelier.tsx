@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Bot, Sparkles, X, Check, ArrowRight, RefreshCw, Award } from 'lucide-react';
 import type { Perfume, AISommelierQuiz, AISommelierRecommendation } from '../types';
+import { formatPrice } from '../utils/format';
 
 interface AISommelierProps {
   perfumes: Perfume[];
@@ -33,11 +34,9 @@ export const AISommelier: React.FC<AISommelierProps> = ({
     setRecommendations([]);
 
     setTimeout(() => {
-      // Algoritmo inteligente de coincidencia
       const matches: AISommelierRecommendation[] = perfumes.map((perfume) => {
-        let score = 70; // Base score
+        let score = 70;
 
-        // Coincidencia por Ocasión & Vibe
         if (quiz.preferredVibe === 'amaderado_oriental' && (perfume.accords.includes('Oud') || perfume.accords.includes('Ámbar') || perfume.category === 'arabe')) {
           score += 20;
         }
@@ -55,7 +54,6 @@ export const AISommelier: React.FC<AISommelierProps> = ({
           score += 8;
         }
 
-        // Cap at 99%
         const matchScore = Math.min(99, score + Math.floor(Math.random() * 5));
 
         return {
@@ -66,11 +64,10 @@ export const AISommelier: React.FC<AISommelierProps> = ({
         };
       });
 
-      // Ordenar por mejor match score
       matches.sort((a, b) => b.matchScore - a.matchScore);
       setRecommendations(matches.slice(0, 3));
       setIsAnalyzing(false);
-      setStep(5); // Pantalla de Resultados
+      setStep(5);
     }, 1200);
   };
 
@@ -307,7 +304,7 @@ export const AISommelier: React.FC<AISommelierProps> = ({
                       <h5 className="font-serif font-bold text-slate-100 text-base mt-1">
                         {rec.perfume.name}
                       </h5>
-                      <p className="text-xs text-slate-400">{rec.perfume.brand} &bull; ${rec.perfume.price.toFixed(2)}</p>
+                      <p className="text-xs text-slate-400">{rec.perfume.brand} &bull; {formatPrice(rec.perfume.price)}</p>
                       <p className="text-xs text-gold-300/90 mt-1 font-light italic">
                         "{rec.whyItMatches}"
                       </p>

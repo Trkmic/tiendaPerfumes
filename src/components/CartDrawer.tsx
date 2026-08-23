@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Trash2, ShoppingBag, ArrowRight, Check, CreditCard, ShieldCheck, AlertCircle, Lock } from 'lucide-react';
 import type { CartItem, CustomerDetails } from '../types';
 import { sendN8nWebhook } from '../lib/n8nWebhook';
+import { formatPrice } from '../utils/format';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -85,7 +86,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
     const orderId = `MP-${Math.floor(100000 + Math.random() * 900000)}`;
 
-    // Formatear payload para n8n / backend
     const payload = {
       eventType: 'new_order' as const,
       orderId,
@@ -105,17 +105,13 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       notes: customer.notes
     };
 
-    // Disparar Webhook n8n (Registro de compra + Notificación por Gmail)
     await sendN8nWebhook(payload);
 
-    // PROCESAMIENTO MERCADO PAGO
-    // Si existe una URL de Checkout Pro configurada en VITE_MERCADOPAGO_CHECKOUT_URL la abre
     const mpCheckoutUrl = import.meta.env.VITE_MERCADOPAGO_CHECKOUT_URL || '';
 
     if (mpCheckoutUrl) {
       window.location.href = mpCheckoutUrl;
     } else {
-      // Simulación de pasarela de cobro Mercado Pago con redirección segura
       setTimeout(() => {
         setIsProcessing(false);
         setCheckoutStep('success');
@@ -167,7 +163,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 </p>
                 <p className="text-slate-300">• Cliente: {customer.fullName}</p>
                 <p className="text-slate-300">• Email: {customer.email}</p>
-                <p className="text-slate-300">• Total Cobrado: ${totalPrice.toFixed(2)} USD</p>
+                <p className="text-slate-300">• Total Cobrado: {formatPrice(totalPrice)}</p>
                 <p className="text-slate-300">• Estado: Cobro Aprobado en Línea</p>
               </div>
 
@@ -209,7 +205,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                         </h4>
                         <p className="text-[11px] text-slate-400">{item.perfume.brand} &bull; {item.selectedMl}ml</p>
                         <span className="text-xs font-bold text-gold-400">
-                          ${(item.perfume.price * item.quantity).toFixed(2)}
+                          {formatPrice(item.perfume.price * item.quantity)}
                         </span>
                       </div>
 
@@ -247,7 +243,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-slate-400">Subtotal:</span>
                     <span className="font-serif font-extrabold text-2xl text-gold-400">
-                      ${totalPrice.toFixed(2)}
+                      {formatPrice(totalPrice)}
                     </span>
                   </div>
 
@@ -426,7 +422,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   ) : (
                     <>
                       <Lock className="w-4 h-4" />
-                      <span>Pagar ${totalPrice.toFixed(2)} USD con Mercado Pago</span>
+                      <span>Pagar {formatPrice(totalPrice)} con Mercado Pago</span>
                     </>
                   )}
                 </button>

@@ -42,7 +42,7 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Top Banner Announcement */}
       <div className="bg-gradient-to-r from-emerald-950 via-dark-900 to-emerald-950 text-gold-400 text-xs py-1.5 px-4 text-center border-b border-gold-500/10 font-medium tracking-wide flex items-center justify-center gap-2">
         <Sparkles className="w-3.5 h-3.5 text-gold-400 animate-pulse" />
-        <span>Envío gratis a todo el país en compras superiores a $100 &bull; 100% Perfumes Originales &bull; Pagos Seguros</span>
+        <span>Envío gratis a todo el país en compras superiores a $80.000 &bull; 100% Perfumes Originales &bull; Pagos Seguros</span>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

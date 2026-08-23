@@ -1,4 +1,4 @@
--- Script SQL para insertar Perfumes de Mujer en Supabase (Sintaxis PostgreSQL Corregida)
+-- Script SQL para insertar Perfumes de Mujer en Supabase (Precios en Pesos Argentinos ARS)
 
 INSERT INTO perfumes (
   id, name, brand, category, gender, price, original_price, ml_options, image, description,
@@ -10,8 +10,8 @@ INSERT INTO perfumes (
   'Lattafa Perfumes',
   'arabe',
   'mujer',
-  55.00,
-  68.00,
+  55000.00,
+  68000.00,
   ARRAY[100],
   '/images/amber_vanilla.png',
   'Una fragancia femenina irresistiblemente dulce y cremosa. Yara combina orquídeas tropicales, helado de fresa, coco cremoso y una base atalcada de vainilla gourmand y almizcle. Un éxito viral de la perfumería árabe.',
@@ -33,8 +33,8 @@ INSERT INTO perfumes (
   'Armaf Dubai',
   'arabe',
   'mujer',
-  58.00,
-  72.00,
+  58000.00,
+  72000.00,
   ARRAY[105],
   '/images/amber_vanilla.png',
   'La expresión definitiva del lujo femenino oriental. Inspirado en Coco Mademoiselle, abre con notas cítricas vibrantes de naranja y bergamota, evolucionando hacia un corazón de rosa y jazmín con fondo de pachulí y vainilla sensual.',
@@ -56,8 +56,8 @@ INSERT INTO perfumes (
   'Carolina Herrera',
   'disenador',
   'mujer',
-  165.00,
-  185.00,
+  165000.00,
+  185000.00,
   ARRAY[50, 80],
   '/images/designer_black.png',
   'Una fragancia audaz y sofisticada. Good Girl combina la luz del jazmín y el nardo con la oscuridad del cacao y la haba tonka. Representa la dualidad de la mujer moderna.',
@@ -79,8 +79,8 @@ INSERT INTO perfumes (
   'Yves Saint Laurent',
   'disenador',
   'mujer',
-  175.00,
-  195.00,
+  175000.00,
+  195000.00,
   ARRAY[50, 90],
   '/images/amber_vanilla.png',
   'El perfume de la libertad audaz. Combina la esencia de lavanda de Francia con la sensualidad de la flor de azahar de Marruecos y una nota audaz de orquídea salvaje y vainilla.',
@@ -102,8 +102,8 @@ INSERT INTO perfumes (
   'Dior Paris',
   'disenador',
   'mujer',
-  180.00,
-  205.00,
+  180000.00,
+  205000.00,
   ARRAY[50, 100],
   '/images/royal_blue.png',
   'Un ramo floral extraordinario y voluptuoso. J''adore une la esencia de Ylang-Ylang con notas afrutadas de Rosa Damascena y Jazmín de Grasse para crear un perfume de oro líquido puro.',
@@ -119,4 +119,6 @@ INSERT INTO perfumes (
   4.8,
   210
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+  price = EXCLUDED.price,
+  original_price = EXCLUDED.original_price;
