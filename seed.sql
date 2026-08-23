@@ -1,4 +1,4 @@
--- Script SQL para insertar el catálogo inicial de perfumes en Supabase
+-- Script SQL para insertar el catálogo inicial de perfumes en Supabase (Sintaxis PostgreSQL Corregida)
 
 INSERT INTO perfumes (
   id, name, brand, category, gender, price, original_price, ml_options, image, description,
@@ -52,7 +52,7 @@ INSERT INTO perfumes (
 ),
 (
   'initio-oud-for-greatness-clone',
-  'Bade\'e Al Oud (Oud for Glory)',
+  'Bade''e Al Oud (Oud for Glory)',
   'Lattafa Perfumes',
   'arabe',
   'unisex',
