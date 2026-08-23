@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Trash2, ShoppingBag, ArrowRight, Check, Send, CreditCard } from 'lucide-react';
+import { X, Trash2, ShoppingBag, ArrowRight, Check, Send, CreditCard, AlertCircle } from 'lucide-react';
 import type { CartItem, CustomerDetails } from '../types';
 import { sendN8nWebhook } from '../lib/n8nWebhook';
 
@@ -35,11 +35,52 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     notes: '',
   });
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!customer.fullName.trim()) {
+      newErrors.fullName = 'Por favor ingresa tu nombre y apellido completo.';
+    } else if (customer.fullName.trim().length < 3) {
+      newErrors.fullName = 'El nombre completo debe tener al menos 3 caracteres.';
+    }
+
+    if (!customer.phone.trim()) {
+      newErrors.phone = 'Por favor ingresa tu número de WhatsApp / teléfono.';
+    } else if (customer.phone.trim().length < 6) {
+      newErrors.phone = 'Ingresa un número telefónico válido (mínimo 6 dígitos).';
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!customer.email.trim()) {
+      newErrors.email = 'Por favor ingresa tu dirección de correo electrónico.';
+    } else if (!emailRegex.test(customer.email.trim())) {
+      newErrors.email = 'Ingresa un correo electrónico válido (ejemplo: nombre@gmail.com).';
+    }
+
+    if (!customer.city.trim()) {
+      newErrors.city = 'Por favor indica la ciudad de entrega.';
+    }
+
+    if (!customer.address.trim()) {
+      newErrors.address = 'Por favor indica la dirección exacta de entrega.';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const totalPrice = items.reduce((sum, item) => sum + item.perfume.price * item.quantity, 0);
 
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     if (items.length === 0) return;
+
+    // Validación personalizada
+    if (!validateForm()) {
+      return;
+    }
 
     setIsProcessing(true);
 
@@ -205,7 +246,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   </div>
 
                   <button
-                    onClick={() => setCheckoutStep('details')}
+                    onClick={() => {
+                      setErrors({});
+                      setCheckoutStep('details');
+                    }}
                     className="w-full py-4 rounded-2xl bg-gradient-to-r from-gold-500 via-gold-400 to-gold-600 text-dark-950 font-bold text-sm hover:shadow-gold-glow hover:scale-[1.02] transition-all flex items-center justify-center gap-2 shadow-lg"
                   >
                     <span>Proceder al Pago / WhatsApp</span>
@@ -215,8 +259,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               )}
             </>
           ) : (
-            /* DETAILS & PAYMENT STEP */
-            <form onSubmit={handleCheckout} className="flex-1 flex flex-col justify-between pt-4 space-y-4 overflow-y-auto">
+            /* DETAILS & PAYMENT STEP WITH CUSTOM VALIDATIONS */
+            <form onSubmit={handleCheckout} noValidate className="flex-1 flex flex-col justify-between pt-4 space-y-4 overflow-y-auto">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h4 className="font-serif font-bold text-base text-slate-100">Datos para Envío y Facturación</h4>
@@ -230,65 +274,117 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 </div>
 
                 <div className="space-y-3 text-xs">
+                  {/* Full Name */}
                   <div>
                     <label className="block text-slate-300 font-medium mb-1">Nombre Completo *</label>
                     <input
                       type="text"
-                      required
                       placeholder="Ej: Sofía Benítez"
                       value={customer.fullName}
-                      onChange={(e) => setCustomer({ ...customer, fullName: e.target.value })}
-                      className="w-full p-2.5 rounded-xl bg-dark-950 border border-slate-800 text-slate-200 focus:border-gold-500 focus:outline-none"
+                      onChange={(e) => {
+                        setCustomer({ ...customer, fullName: e.target.value });
+                        if (errors.fullName) setErrors({ ...errors, fullName: '' });
+                      }}
+                      className={`w-full p-2.5 rounded-xl bg-dark-950 border text-slate-200 focus:outline-none transition-colors ${
+                        errors.fullName ? 'border-red-500 focus:border-red-400' : 'border-slate-800 focus:border-gold-500'
+                      }`}
                     />
+                    {errors.fullName && (
+                      <span className="text-[11px] text-red-400 flex items-center gap-1 mt-1 font-medium">
+                        <AlertCircle className="w-3 h-3" /> {errors.fullName}
+                      </span>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
+                    {/* Phone */}
                     <div>
                       <label className="block text-slate-300 font-medium mb-1">WhatsApp / Tel *</label>
                       <input
                         type="tel"
-                        required
                         placeholder="+549..."
                         value={customer.phone}
-                        onChange={(e) => setCustomer({ ...customer, phone: e.target.value })}
-                        className="w-full p-2.5 rounded-xl bg-dark-950 border border-slate-800 text-slate-200 focus:border-gold-500 focus:outline-none"
+                        onChange={(e) => {
+                          setCustomer({ ...customer, phone: e.target.value });
+                          if (errors.phone) setErrors({ ...errors, phone: '' });
+                        }}
+                        className={`w-full p-2.5 rounded-xl bg-dark-950 border text-slate-200 focus:outline-none transition-colors ${
+                          errors.phone ? 'border-red-500 focus:border-red-400' : 'border-slate-800 focus:border-gold-500'
+                        }`}
                       />
+                      {errors.phone && (
+                        <span className="text-[10px] text-red-400 flex items-center gap-1 mt-1 font-medium">
+                          <AlertCircle className="w-3 h-3" /> {errors.phone}
+                        </span>
+                      )}
                     </div>
+
+                    {/* Email */}
                     <div>
                       <label className="block text-slate-300 font-medium mb-1">Gmail / Email *</label>
                       <input
                         type="email"
-                        required
                         placeholder="cliente@gmail.com"
                         value={customer.email}
-                        onChange={(e) => setCustomer({ ...customer, email: e.target.value })}
-                        className="w-full p-2.5 rounded-xl bg-dark-950 border border-slate-800 text-slate-200 focus:border-gold-500 focus:outline-none"
+                        onChange={(e) => {
+                          setCustomer({ ...customer, email: e.target.value });
+                          if (errors.email) setErrors({ ...errors, email: '' });
+                        }}
+                        className={`w-full p-2.5 rounded-xl bg-dark-950 border text-slate-200 focus:outline-none transition-colors ${
+                          errors.email ? 'border-red-500 focus:border-red-400' : 'border-slate-800 focus:border-gold-500'
+                        }`}
                       />
+                      {errors.email && (
+                        <span className="text-[10px] text-red-400 flex items-center gap-1 mt-1 font-medium">
+                          <AlertCircle className="w-3 h-3" /> {errors.email}
+                        </span>
+                      )}
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
+                    {/* City */}
                     <div>
                       <label className="block text-slate-300 font-medium mb-1">Ciudad *</label>
                       <input
                         type="text"
-                        required
                         placeholder="Buenos Aires"
                         value={customer.city}
-                        onChange={(e) => setCustomer({ ...customer, city: e.target.value })}
-                        className="w-full p-2.5 rounded-xl bg-dark-950 border border-slate-800 text-slate-200 focus:border-gold-500 focus:outline-none"
+                        onChange={(e) => {
+                          setCustomer({ ...customer, city: e.target.value });
+                          if (errors.city) setErrors({ ...errors, city: '' });
+                        }}
+                        className={`w-full p-2.5 rounded-xl bg-dark-950 border text-slate-200 focus:outline-none transition-colors ${
+                          errors.city ? 'border-red-500 focus:border-red-400' : 'border-slate-800 focus:border-gold-500'
+                        }`}
                       />
+                      {errors.city && (
+                        <span className="text-[10px] text-red-400 flex items-center gap-1 mt-1 font-medium">
+                          <AlertCircle className="w-3 h-3" /> {errors.city}
+                        </span>
+                      )}
                     </div>
+
+                    {/* Address */}
                     <div>
                       <label className="block text-slate-300 font-medium mb-1">Dirección de Entrega *</label>
                       <input
                         type="text"
-                        required
                         placeholder="Av. Alvear 1850 4B"
                         value={customer.address}
-                        onChange={(e) => setCustomer({ ...customer, address: e.target.value })}
-                        className="w-full p-2.5 rounded-xl bg-dark-950 border border-slate-800 text-slate-200 focus:border-gold-500 focus:outline-none"
+                        onChange={(e) => {
+                          setCustomer({ ...customer, address: e.target.value });
+                          if (errors.address) setErrors({ ...errors, address: '' });
+                        }}
+                        className={`w-full p-2.5 rounded-xl bg-dark-950 border text-slate-200 focus:outline-none transition-colors ${
+                          errors.address ? 'border-red-500 focus:border-red-400' : 'border-slate-800 focus:border-gold-500'
+                        }`}
                       />
+                      {errors.address && (
+                        <span className="text-[10px] text-red-400 flex items-center gap-1 mt-1 font-medium">
+                          <AlertCircle className="w-3 h-3" /> {errors.address}
+                        </span>
+                      )}
                     </div>
                   </div>
 

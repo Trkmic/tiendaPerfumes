@@ -132,10 +132,10 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* Category Navigation Bar */}
+      {/* Category Navigation Bar (CENTERED) */}
       <div className="border-t border-slate-800/60 bg-dark-950/60 backdrop-blur">
-        <div className="max-w-7xl mx-auto px-4 flex items-center justify-center sm:justify-start overflow-x-auto no-scrollbar py-2.5">
-          <div className="flex items-center gap-2 sm:gap-6 min-w-max">
+        <div className="max-w-7xl mx-auto px-4 flex items-center justify-center overflow-x-auto no-scrollbar py-2.5">
+          <div className="flex items-center justify-center gap-2 sm:gap-6 min-w-max mx-auto">
             <button
               onClick={() => handleCategoryClick('todos')}
               className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
