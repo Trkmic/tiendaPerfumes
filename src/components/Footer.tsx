@@ -17,7 +17,7 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenSommelie
   };
 
   return (
-    <footer className="bg-dark-950 border-t border-gold-500/20 text-slate-400 text-xs pt-16 pb-12 relative overflow-hidden">
+    <footer className="bg-dark-950 border-t border-gold-500/20 text-slate-400 text-xs pt-16 pb-24 sm:pb-16 relative overflow-hidden">
       
       {/* Glow effect */}
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-96 h-48 bg-gold-500/5 rounded-full blur-3xl pointer-events-none" />
@@ -86,8 +86,8 @@ export const Footer: React.FC<FooterProps> = ({ onSelectCategory, onOpenSommelie
 
         </div>
 
-        {/* Bottom Rights */}
-        <div className="pt-8 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
+        {/* Bottom Rights Bar (Centered and offset to prevent floating button collision) */}
+        <div className="pt-8 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500 sm:pr-44">
           <p>&copy; 2026 LuxeOud & Co. Todos los derechos reservados. Perfumería Árabe & Diseñador.</p>
           <div className="flex items-center gap-4">
             <button
